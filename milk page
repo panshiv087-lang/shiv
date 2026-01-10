@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+<meta charset="UTF-8">
+<title>Auto Daily Stock Sheet</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  font-family: system-ui;
+  background:#f4f6f8;
+}
+.card{
+  max-width:420px;
+  margin:20px auto;
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 10px 25px rgba(0,0,0,.1);
+}
+h2{
+  text-align:center;
+  margin-bottom:10px;
+}
+input,select{
+  width:100%;
+  padding:8px;
+  margin:6px 0;
+  border:1px solid #ccc;
+  border-radius:8px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+th,td{
+  border:1px solid #ddd;
+  padding:6px;
+  text-align:center;
+}
+th{
+  background:#f1f5f9;
+}
+.btns{
+  display:flex;
+  gap:10px;
+  margin-top:15px;
+}
+button{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  font-size:15px;
+  color:#fff;
+}
+.save{background:#f59e0b;}
+.load{background:#3b82f6;}
+.whatsapp{background:#22c55e;}
+</style>
+</head>
+
+<body>
+<div class="card">
+  <h2>📦 Auto Daily Stock Sheet</h2>
+
+  <label>તારીખ પસંદ કરો:</label>
+  <input type="date" id="date">
+
+  <input type="text" id="search" placeholder="🔍 વસ્તુ શોધો..." onkeyup="filterItems()">
+
+  <table>
+    <tr>
+      <th>Stock</th>
+      <th>Item</th>
+      <th>Auto</th>
+    </tr>
+
+    <tr><td><input></td><td>લીટર</td><td><input></td></tr>
+    <tr><td><input></td><td>તાજા</td><td><input></td></tr>
+    <tr><td><input></td><td>છાસ</td><td><input></td></tr>
+    <tr><td><input></td><td>દહીં</td><td><input></td></tr>
+    <tr><td><input></td><td>માખણ</td><td><input></td></tr>
+    <tr><td><input></td><td>ખાટી છાસ</td><td><input></td></tr>
+    <tr><td><input></td><td>માખણ</td><td><input></td></tr>
+  </table>
+
+  <div class="btns">
+    <button class="save" onclick="saveData()">💾 Save</button>
+    <button class="load" onclick="loadData()">📂 Load</button>
+    <button class="whatsapp" onclick="sendWhatsApp()">🟢 WhatsApp</button>
+  </div>
+</div>
+
+<script>
+const DB = "https://milk-909f0-default-rtdb.firebaseio.com/stock";
+
+function getRows(){
+  return [...document.querySelectorAll("table tr")].slice(1);
+}
+
+function saveData(){
+  const date = document.getElementById("date").value;
+  if(!date){ alert("તારીખ પસંદ કરો"); return; }
+
+  let data = {};
+  getRows().forEach((r,i)=>{
+    data[i] = {
+      stock: r.cells[0].querySelector("input").value,
+      item: r.cells[1].innerText,
+      auto: r.cells[2].querySelector("input").value
+    };
+  });
+
+  fetch(`${DB}/${date}.json`,{
+    method:"PUT",
+    body:JSON.stringify(data)
+  }).then(()=>alert("✅ Save થઈ ગયું"));
+}
+
+function loadData(){
+  const date = document.getElementById("date").value;
+  if(!date){ alert("તારીખ પસંદ કરો"); return; }
+
+  fetch(`${DB}/${date}.json`)
+  .then(r=>r.json())
+  .then(d=>{
+    if(!d){ alert("ડેટા નથી"); return; }
+    getRows().forEach((r,i)=>{
+      r.cells[0].querySelector("input").value = d[i]?.stock || "";
+      r.cells[2].querySelector("input").value = d[i]?.auto || "";
+    });
+  });
+}
+
+function sendWhatsApp(){
+  let msg = "📦 Daily Stock Report\n";
+  getRows().forEach(r=>{
+    msg += `${r.cells[1].innerText} : ${r.cells[0].querySelector("input").value}\n`;
+  });
+  window.open("https://wa.me/?text="+encodeURIComponent(msg));
+}
+
+function filterItems(){
+  let q = document.getElementById("search").value;
+  getRows().forEach(r=>{
+    r.style.display = r.cells[1].innerText.includes(q) ? "" : "none";
+  });
+}
+</script>
+</body>
+</html>
